@@ -6,12 +6,13 @@ from time import time
 start = time()
 
 zsd_path = 'C:\\Users\\by059491\\Downloads\\zsd.xlsx'
-lx02_path = 'C:\\Users\\by059491\\Downloads\\lx02.xlsx'
+lx02_path = 'C:\\Users\\by059491\\Downloads\\a64ca054-85a8-441e-a0f2-9698644439c4.xlsx'
 
 
 class Subtotal:
     """
     Читает эксель файл и подсчитывает количество продукции по каждому материалу.
+    Первой строкой в файле должны быть заголовки столбцов.
     excel_file - путь к файлу
     material - имя колонки, который содержит коды материалов
     quantity - имя колонки, которая содержит количество, необходимое для подсчета
