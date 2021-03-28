@@ -1,9 +1,5 @@
 from pprint import pprint
-
 import pyexcel
-from time import time
-
-start = time()
 
 zsd_path = 'C:\\Users\\by059491\\Downloads\\zsd.xlsx'
 lx02_path = 'C:\\Users\\by059491\\Downloads\\a64ca054-85a8-441e-a0f2-9698644439c4.xlsx'
@@ -17,15 +13,21 @@ class Subtotal:
     material - имя колонки, который содержит коды материалов
     quantity - имя колонки, которая содержит количество, необходимое для подсчета
     """
-    def __init__(self, excel_file, material, quantity):
+    def __init__(self, excel_file, material, quantity, typ=None, value_to_ignore=None):
         self.excel_array = pyexcel.get_records(file_name=excel_file)
         self.output = {}
         for row_index, row in enumerate(self.excel_array):
-            previous_row = self.excel_array[row_index - 1] if row_index != 0 else None
-            if row[material] not in self.output:
-                self.output.setdefault(row[material], row[quantity])
-            if previous_row is not None and previous_row[material] == row[material]:
-                self.output[row[material]] += row[quantity]
+            if typ is not None and row[typ] == value_to_ignore:
+                continue
+            else:
+                if row_index == 0 or typ is not None and self.excel_array[row_index - 1][typ] != row[typ]:
+                    previous_row = None
+                else:
+                    previous_row = self.excel_array[row_index - 1]
+                if row[material] not in self.output:
+                    self.output.setdefault(row[material], row[quantity])
+                if previous_row is not None and previous_row[material] == row[material]:
+                    self.output[row[material]] += row[quantity]
 
     def __getitem__(self, item):
         return self.output[item]
@@ -53,7 +55,7 @@ class Subtotal:
 
 if __name__ == '__main__':
     subtotal_zsd = Subtotal(zsd_path, material='Material', quantity='Delivery Quantity')
-    subtotal_lx02 = Subtotal(lx02_path, material='Material', quantity='Available stock')
+    subtotal_lx02 = Subtotal(lx02_path, material='Material', quantity='Available stock', typ='Storage Type', value_to_ignore='110')
     print(subtotal_zsd['5608'])
     print(subtotal_zsd)
     print(subtotal_lx02)
