@@ -1,8 +1,8 @@
 from pprint import pprint
 import pyexcel
 
-zsd_path = 'C:\\Users\\by059491\\Downloads\\zsd.xlsx'
-lx02_path = 'C:\\Users\\by059491\\Downloads\\a64ca054-85a8-441e-a0f2-9698644439c4.xlsx'
+zsd_path = 'C:\\Users\\by059491\\Downloads\\562b0f2f-8482-4c3f-a9c3-1fab6d4ce111.xlsx'
+lx02_path = 'C:\\Users\\by059491\\Downloads\\f8b2ac84-531b-4fa7-a86a-26c584e4cefb.xlsx'
 
 
 class Subtotal:
@@ -13,20 +13,20 @@ class Subtotal:
     material - имя колонки, который содержит коды материалов
     quantity - имя колонки, которая содержит количество, необходимое для подсчета
     """
-    def __init__(self, excel_file, material, quantity, typ=None, value_to_ignore=None):
+    def __init__(self, excel_file, material, quantity, value_to_ignore=None):
         self.excel_array = pyexcel.get_records(file_name=excel_file)
         self.output = {}
         for row_index, row in enumerate(self.excel_array):
-            if typ is not None and row[typ] == value_to_ignore:
+            if value_to_ignore is not None and any(row[x] == y for x, y in value_to_ignore.items()):
                 continue
             else:
-                if row_index == 0 or typ is not None and self.excel_array[row_index - 1][typ] != row[typ]:
-                    previous_row = None
-                else:
-                    previous_row = self.excel_array[row_index - 1]
+                previous_row = self.excel_array[row_index - 1]
                 if row[material] not in self.output:
                     self.output.setdefault(row[material], row[quantity])
-                if previous_row is not None and previous_row[material] == row[material]:
+                    continue
+                if value_to_ignore is not None and any(previous_row[x] == y for x, y in value_to_ignore.items()):
+                    continue
+                elif previous_row[material] == row[material]:
                     self.output[row[material]] += row[quantity]
 
     def __getitem__(self, item):
@@ -55,9 +55,12 @@ class Subtotal:
 
 if __name__ == '__main__':
     subtotal_zsd = Subtotal(zsd_path, material='Material', quantity='Delivery Quantity')
-    subtotal_lx02 = Subtotal(lx02_path, material='Material', quantity='Available stock', typ='Storage Type', value_to_ignore='110')
+    subtotal_lx02 = Subtotal(lx02_path,
+                             material='Material',
+                             quantity='Available stock',
+                             value_to_ignore={'Storage Type': '110'})
     print(subtotal_zsd['5608'])
     print(subtotal_zsd)
     print(subtotal_lx02)
     res = subtotal_zsd - subtotal_lx02
-    pprint(res)
+    print(res)
