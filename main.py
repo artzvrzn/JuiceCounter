@@ -1,3 +1,5 @@
+from pprint import pprint
+
 import pyexcel
 from time import time
 
@@ -8,6 +10,12 @@ lx02_path = 'C:\\Users\\by059491\\Downloads\\lx02.xlsx'
 
 
 class Subtotal:
+    """
+    Читает эксель файл и подсчитывает количество продукции по каждому материалу.
+    excel_file - путь к файлу
+    material - имя колонки, который содержит коды материалов
+    quantity - имя колонки, которая содержит количество, необходимое для подсчета
+    """
     def __init__(self, excel_file, material, quantity):
         self.excel_array = pyexcel.get_records(file_name=excel_file)
         self.output = {}
@@ -22,15 +30,21 @@ class Subtotal:
         return self.output[item]
 
     def __sub__(self, other):
-        res = {}
+        """
+        Метод вычисления. Отнимает количество по каждому материалу, если тот есть в other.
+        Если полученное количество отрицательное - игнорирует его.
+        Возвращает словарь.
+        """
+        sub_output = {}
         for key, val in self.output.items():
             try:
                 new_val = self.output[key]
                 new_val -= other[key]
-                res.setdefault(key, new_val)
-            except KeyError:
-                continue
-        return res
+                if new_val > 0:
+                    sub_output.setdefault(key, new_val)
+            except KeyError as exc:
+                print(exc)
+        return sub_output
 
     def __str__(self):
         return f'{self.output}'
@@ -43,4 +57,4 @@ if __name__ == '__main__':
     print(subtotal_zsd)
     print(subtotal_lx02)
     res = subtotal_zsd - subtotal_lx02
-    print(res)
+    pprint(res)
