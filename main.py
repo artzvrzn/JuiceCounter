@@ -2,7 +2,7 @@ from pprint import pprint
 import pyexcel
 
 zsd_path = 'C:\\Users\\by059491\\Downloads\\562b0f2f-8482-4c3f-a9c3-1fab6d4ce111.xlsx'
-lx02_path = 'C:\\Users\\by059491\\Downloads\\f8b2ac84-531b-4fa7-a86a-26c584e4cefb.xlsx'
+lx02_path = 'C:\\Users\\by059491\\Downloads\\a64ca054-85a8-441e-a0f2-9698644439c4.xlsx'
 
 
 class Subtotal:
@@ -12,6 +12,7 @@ class Subtotal:
     excel_file - путь к файлу
     material - имя колонки, который содержит коды материалов
     quantity - имя колонки, которая содержит количество, необходимое для подсчета
+    value_to_ignore - словарь, ключ - имя колонки, значение - что исключать
     """
     def __init__(self, excel_file, material, quantity, value_to_ignore=None):
         self.excel_array = pyexcel.get_records(file_name=excel_file)
@@ -20,13 +21,10 @@ class Subtotal:
             if value_to_ignore is not None and any(row[x] == y for x, y in value_to_ignore.items()):
                 continue
             else:
-                previous_row = self.excel_array[row_index - 1]
                 if row[material] not in self.output:
                     self.output.setdefault(row[material], row[quantity])
                     continue
-                if value_to_ignore is not None and any(previous_row[x] == y for x, y in value_to_ignore.items()):
-                    continue
-                elif previous_row[material] == row[material]:
+                elif row[material] in self.output:
                     self.output[row[material]] += row[quantity]
 
     def __getitem__(self, item):
@@ -50,6 +48,7 @@ class Subtotal:
         return sub_output
 
     def __str__(self):
+
         return f'{self.output}'
 
 
