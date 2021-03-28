@@ -1,7 +1,4 @@
-from pprint import pprint
-
 import pyexcel
-
 from time import time
 
 start = time()
@@ -11,20 +8,39 @@ lx02_path = 'C:\\Users\\by059491\\Downloads\\lx02.xlsx'
 
 
 class Subtotal:
-    def __init__(self, excel_file):
+    def __init__(self, excel_file, material, quantity):
         self.excel_array = pyexcel.get_records(file_name=excel_file)
         self.output = {}
-
-    def __call__(self, material, quantity):
         for row_index, row in enumerate(self.excel_array):
             previous_row = self.excel_array[row_index - 1] if row_index != 0 else None
             if row[material] not in self.output:
                 self.output.setdefault(row[material], row[quantity])
             if previous_row is not None and previous_row[material] == row[material]:
                 self.output[row[material]] += row[quantity]
-        return self.output
+
+    def __getitem__(self, item):
+        return self.output[item]
+
+    def __sub__(self, other):
+        res = {}
+        for key, val in self.output.items():
+            try:
+                new_val = self.output[key]
+                new_val -= other[key]
+                res.setdefault(key, new_val)
+            except KeyError:
+                continue
+        return res
+
+    def __str__(self):
+        return f'{self.output}'
 
 
 if __name__ == '__main__':
-    subtotal = Subtotal(zsd_path)
-    print(subtotal(material='Material', quantity='Delivery Quantity'))
+    subtotal_zsd = Subtotal(zsd_path, material='Material', quantity='Delivery Quantity')
+    subtotal_lx02 = Subtotal(lx02_path, material='Material', quantity='Available stock')
+    print(subtotal_zsd['5608'])
+    print(subtotal_zsd)
+    print(subtotal_lx02)
+    res = subtotal_zsd - subtotal_lx02
+    print(res)
