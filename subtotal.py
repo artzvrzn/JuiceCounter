@@ -1,10 +1,13 @@
 from pprint import pprint
 from datetime import datetime
-from dataclasses import dataclass
+from dataclasses import dataclass, astuple
+from operator import attrgetter
 
 import pyexcel
+import openpyxl
 
 MATERIAL = 'Material'
+DESCRIPTION = 'Material description'
 BIN = 'Storage Bin'
 TYP = 'Storage Type'
 QUANTITY = 'Available stock'
@@ -29,6 +32,13 @@ class BinData:
     bin_name: str
     quantity: int
     bin_date: datetime
+    bin_desc: str
+
+    def __str__(self):
+        return f'{self.bin_desc} - {self.quantity} - {self.bin_name} - {self.bin_date.strftime("%d.%m.%Y ")}'
+
+    def __iter__(self):
+        return iter(astuple(self))
 
 
 class BinDeterminate:
@@ -51,7 +61,7 @@ class BinDeterminate:
         self.excel_array = excel_file
         self.output = {}
         for row in self.excel_array:
-            bin_data = BinData(bin_name=row[BIN], quantity=row[QUANTITY], bin_date=row[DATE])
+            bin_data = BinData(bin_name=row[BIN], quantity=row[QUANTITY], bin_date=row[DATE], bin_desc=row[DESCRIPTION])
             if not any(row[k] in v for k, v in self.ignore_dict.items()):
                 if row[MATERIAL] not in self.output:
                     self.output.setdefault(row[MATERIAL], [bin_data, ])
@@ -65,6 +75,32 @@ class BinDeterminate:
                             material_list[exist_index].bin_date = bin_data.bin_date
                     except StopIteration:
                         material_list.append(bin_data)
+
+    def get_sorted_array(self):
+        sorted_output = {k: v for k, v in sorted(self.output.items(), key=lambda x: x[1][0].bin_desc)}
+        for key, value in sorted_output.items():
+            value.sort(key=attrgetter('bin_date', 'quantity'))
+        return sorted_output
+
+    def get_current_bin_excel(self):
+        book_name = 'example.xlsx'
+        try:
+            sheet = pyexcel.get_sheet(file_name=book_name)
+        except FileNotFoundError:
+            book = openpyxl.Workbook()
+            book.save(filename=book_name)
+            sheet = pyexcel.get_sheet(file_name=book_name)
+        sheet.row += ["Material", "Description", "Bin", "Date", "Quantity"]
+        for key, value in self.get_sorted_array().items():
+            sheet.row += [key, value[0].bin_desc, value[0].bin_name, value[0].bin_date, value[0].quantity]
+        sheet.save_as(filename=book_name)
+
+    def get_current_bin_txt(self):
+        with open('output.txt', 'w') as file:
+            for key, value in self.get_sorted_array().items():
+                output = f'{key:<10} {value[0].bin_desc:<40} :: {value[0].bin_name:<6} :: ' \
+                         f'{value[0].bin_date.strftime("%d.%m.%Y")}\n'
+                file.write(output)
 
     def __str__(self):
         return f'{self.output}'
@@ -138,4 +174,4 @@ if __name__ == '__main__':
     #     print(f'{desc[0]} - {pallet_amount}')
 
     bin_determinate = BinDeterminate(lx02_array)
-    print(bin_determinate)
+    pprint(bin_determinate.get_current_bin_txt())
