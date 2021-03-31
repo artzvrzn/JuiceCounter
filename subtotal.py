@@ -1,7 +1,7 @@
-from pprint import pprint
 from datetime import datetime
 from dataclasses import dataclass, astuple
 from operator import attrgetter
+from math import ceil
 
 import pyexcel
 import openpyxl
@@ -96,11 +96,11 @@ class BinDeterminate:
         sheet.save_as(filename=book_name)
 
     def get_current_bin_txt(self):
-        with open('output.txt', 'w') as file:
+        with open('output.txt', 'w') as txt:
             for key, value in self.get_sorted_array().items():
                 output = f'{key:<10} {value[0].bin_desc:<40} :: {value[0].bin_name:<6} :: ' \
                          f'{value[0].bin_date.strftime("%d.%m.%Y")}\n'
-                file.write(output)
+                txt.write(output)
 
     def __str__(self):
         return f'{self.output}'
@@ -145,8 +145,8 @@ class Subtotal:
                 new_val -= other[key]
                 if new_val > 0:
                     sub_output.setdefault(key, new_val)
-            except KeyError as exc:
-                print(exc)
+            except KeyError:
+                pass
         return sub_output
 
     def __str__(self):
@@ -154,24 +154,27 @@ class Subtotal:
 
 
 if __name__ == '__main__':
-    # zsd_path = 'C:\\Users\\by059491\\Downloads\\55408ca5-0618-4227-85b2-17ad9265b7dd.xlsx'
-    lx02_path = 'C:\\Users\\by059491\\Downloads\\60b9c892-9784-4c26-b3fe-0892eded0b88.xlsx'
-    # zsd_array = pyexcel.get_records(file_name=zsd_path)
+    zsd_path = 'C:\\Users\\by059491\\Downloads\\52d2fed5-b4ec-4e5a-b646-1c86050b85e2.xlsx'
+    lx02_path = 'C:\\Users\\by059491\\Downloads\\09996cd2-b0d0-4cee-84d5-45745d164114.xlsx'
+    zsd_array = pyexcel.get_records(file_name=zsd_path)
     lx02_array = pyexcel.get_records(file_name=lx02_path)
 
-    # subtotal_zsd = Subtotal(zsd_array, material='Material', quantity='Cumltv Confd Qty(SU)')
-    # subtotal_lx02 = Subtotal(lx02_array,
-    #                          material='Material',
-    #                          quantity='Available stock',
-    #                          value_to_ignore={'Storage Type': '110'})
-    # print(subtotal_zsd['5608'])
-    # print(subtotal_zsd)
-    # print(subtotal_lx02)
-    # res = subtotal_zsd - subtotal_lx02
-    # pprint(res)
-    # for mat, desc in juice_list.items():
-    #     pallet_amount = round(res[mat] / desc[1], 1)
-    #     print(f'{desc[0]} - {pallet_amount}')
+    subtotal_zsd = Subtotal(zsd_array, material='Material', quantity='Cumltv Confd Qty(SU)')
+    subtotal_lx02 = Subtotal(lx02_array,
+                             material='Material',
+                             quantity='Available stock',
+                             value_to_ignore={'Storage Type': '110'})
 
     bin_determinate = BinDeterminate(lx02_array)
-    pprint(bin_determinate.get_current_bin_txt())
+    difference = subtotal_zsd - subtotal_lx02
+    with open('test.txt', 'w') as file:
+        for mat, mat_value in bin_determinate.get_sorted_array().items():
+            if mat in juice_list:
+                try:
+                    amount = difference[mat] / juice_list[mat][1]
+                    line = f'{mat:<8} {mat_value[0].bin_desc:<40} | {mat_value[0].bin_name:<8} | ' \
+                           f'{ceil(amount):<2} | {difference[mat]}\n'
+                    file.write(line)
+                    print(line, end='')
+                except KeyError:
+                    pass
