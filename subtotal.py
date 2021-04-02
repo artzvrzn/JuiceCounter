@@ -154,8 +154,8 @@ class Subtotal:
 
 
 if __name__ == '__main__':
-    zsd_path = 'C:\\Users\\by059491\\Downloads\\52d2fed5-b4ec-4e5a-b646-1c86050b85e2.xlsx'
-    lx02_path = 'C:\\Users\\by059491\\Downloads\\09996cd2-b0d0-4cee-84d5-45745d164114.xlsx'
+    zsd_path = 'C:\\Users\\by059491\\Downloads\\0ec09741-393f-46cd-845e-8b59c21d2966.xlsx'
+    lx02_path = 'C:\\Users\\by059491\\Downloads\\8222afe4-c7d3-44da-9320-b50b30a6e135.xlsx'
     zsd_array = pyexcel.get_records(file_name=zsd_path)
     lx02_array = pyexcel.get_records(file_name=lx02_path)
 
