@@ -11,7 +11,7 @@ DESCRIPTION = 'Material description'
 BIN = 'Storage Bin'
 TYP = 'Storage Type'
 QUANTITY = 'Available stock'
-DATE = 'GR Date'
+DATE = 'SLED/BBD'
 QUARANTINE = 'Storage location'
 
 juice_list = {'819310': ('1.0 BRK X12 DOBRIY APPLE JC GEMINA BY', 48),
@@ -71,7 +71,8 @@ class BinDeterminate:
                         exist_index = material_list.index(
                             next(x for x in material_list if x.bin_name == bin_data.bin_name))
                         material_list[exist_index].quantity += bin_data.quantity
-                        if material_list[exist_index].bin_date < bin_data.bin_date:
+                        # if row[MATERIAL] == '819611' and material_list[exist_index].bin_name == 'M15': print(material_list[exist_index].bin_name, material_list[exist_index].bin_date, material_list[exist_index].quantity)
+                        if material_list[exist_index].bin_date > bin_data.bin_date:
                             material_list[exist_index].bin_date = bin_data.bin_date
                     except StopIteration:
                         material_list.append(bin_data)
@@ -154,8 +155,8 @@ class Subtotal:
 
 
 if __name__ == '__main__':
-    zsd_path = 'C:\\Users\\by059491\\Downloads\\0ec09741-393f-46cd-845e-8b59c21d2966.xlsx'
-    lx02_path = 'C:\\Users\\by059491\\Downloads\\8222afe4-c7d3-44da-9320-b50b30a6e135.xlsx'
+    zsd_path = 'C:\\Users\\by059491\\Downloads\\1633388c-9988-4eff-bd1e-fa0e710b5224.xlsx'
+    lx02_path = 'C:\\Users\\by059491\\Downloads\\0da1ccea-3568-4536-8258-9761d30a5b01.xlsx'
     zsd_array = pyexcel.get_records(file_name=zsd_path)
     lx02_array = pyexcel.get_records(file_name=lx02_path)
 
