@@ -18,9 +18,10 @@ juice_list = {'819310': ('1.0 BRK X12 DOBRIY APPLE JC GEMINA BY', 48),
               '819611': ('1.0 BRK X12 DOBRIY MULTIFRUIT NECT G BY', 48),
               '372112': ('1.0 BRK X12 DOBRIY ORANGE NECT GEMIN BY', 48),
               '819410': ('1.0 BRK X12 DOBRIY TOMATO JC GEMINA BY', 48),
+              '1533902': ('1.0 BRK X12 DOBRIY BIRCH JC GEMINA BY', 48),
               '735207': ('1.0 BRK X12 RICH ORANGE JUICE BY', 60),
               '750009': ('1.0 BRK X12 RICH APPLE JUICE BY', 60),
-              '752005': ('1.0 BRK X12 RICH CHERRY NECT BYRU', 60),
+              '752008': ('1.0 BRK X12 RICH CHERRY NECT BY', 60),
               '822603': ('2.0 BRK X6 DOBRIY APPLE JC BYRU', 65),
               '865503': ('2.0 BRK X6 DOBRIY MULTIFRUIT NECT BYRU', 65),
               '371503': ('2.0 BRK X6 DOBRIY ORANGE NECT BYRU', 65),
@@ -155,8 +156,8 @@ class Subtotal:
 
 
 if __name__ == '__main__':
-    zsd_path = 'C:\\Users\\by059491\\Downloads\\1633388c-9988-4eff-bd1e-fa0e710b5224.xlsx'
-    lx02_path = 'C:\\Users\\by059491\\Downloads\\0da1ccea-3568-4536-8258-9761d30a5b01.xlsx'
+    zsd_path = 'C:\\Users\\by059491\\Downloads\\e312a33c-a3c8-45a6-a5ef-2beeb13beea8.xlsx'
+    lx02_path = 'C:\\Users\\by059491\\Downloads\\fc9538b4-d8e2-4881-96a8-5f69280dbdf2.xlsx'
     zsd_array = pyexcel.get_records(file_name=zsd_path)
     lx02_array = pyexcel.get_records(file_name=lx02_path)
 
