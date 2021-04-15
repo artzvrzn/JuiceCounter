@@ -4,7 +4,6 @@ from operator import attrgetter
 from math import ceil
 
 import pyexcel
-import openpyxl
 
 MATERIAL = 'Material'
 DESCRIPTION = 'Material description'
@@ -43,6 +42,13 @@ class BinData:
 
 
 class BinDeterminate:
+    """
+    Читает эксель файл и определяет идущее в отгрузку место для каждого материала.
+    Формирует словарь, ключ: материал, значение: список объектов BinData, содержащих место, количество продукции,
+    дату и описание материала.
+    """
+
+    # словарь исключений для эксель файла
     ignore_dict = {
         MATERIAL: ['10018454',
                    '10018455',
@@ -59,6 +65,9 @@ class BinDeterminate:
     }
 
     def __init__(self, excel_file):
+        """
+        :param excel_file: принимает pyexcel.get_records(путь к файлу)
+        """
         self.excel_array = excel_file
         self.output = {}
         for row in self.excel_array:
@@ -79,25 +88,20 @@ class BinDeterminate:
                         material_list.append(bin_data)
 
     def get_sorted_array(self):
+        """
+        Сортирует значения полученного словаря по дате и затем по количеству.
+        Возращает новый словарь.
+
+        """
         sorted_output = {k: v for k, v in sorted(self.output.items(), key=lambda x: x[1][0].bin_desc)}
         for key, value in sorted_output.items():
             value.sort(key=attrgetter('bin_date', 'quantity'))
         return sorted_output
 
-    def get_current_bin_excel(self):
-        book_name = 'example.xlsx'
-        try:
-            sheet = pyexcel.get_sheet(file_name=book_name)
-        except FileNotFoundError:
-            book = openpyxl.Workbook()
-            book.save(filename=book_name)
-            sheet = pyexcel.get_sheet(file_name=book_name)
-        sheet.row += ["Material", "Description", "Bin", "Date", "Quantity"]
-        for key, value in self.get_sorted_array().items():
-            sheet.row += [key, value[0].bin_desc, value[0].bin_name, value[0].bin_date, value[0].quantity]
-        sheet.save_as(filename=book_name)
-
     def get_current_bin_txt(self):
+        """
+        Записывает файл output.txt, в котором перечислены все материалы и первое отгружаемое место.
+        """
         with open('output.txt', 'w') as txt:
             for key, value in self.get_sorted_array().items():
                 output = f'{key:<10} {value[0].bin_desc:<40} :: {value[0].bin_name:<6} :: ' \
@@ -110,15 +114,17 @@ class BinDeterminate:
 
 class Subtotal:
     """
-    Читает эксель файл и подсчитывает количество продукции по каждому материалу.
+    Читает эксель файл и подсчитывает общее количество продукции по каждому материалу.
     Первой строкой в файле должны быть заголовки столбцов.
-    excel_file - принимает pyexcel.get_records(путь к файлу)
-    material - имя колонки, который содержит коды материалов
-    quantity - имя колонки, которая содержит количество, необходимое для подсчета
-    value_to_ignore - словарь, ключ - имя колонки, значение - что исключать
     """
 
     def __init__(self, excel_file, material, quantity, value_to_ignore=None):
+        """
+        :param excel_file: принимает pyexcel.get_records(путь к файлу)
+        :param material: имя колонки, который содержит коды материалов
+        :param quantity: имя колонки, которая содержит количество, необходимое для подсчета
+        :param value_to_ignore: словарь, ключ - имя колонки, значение - что исключать
+        """
         self.excel_array = excel_file
         self.output = {}
         for row in self.excel_array:
@@ -139,6 +145,9 @@ class Subtotal:
         Метод вычисления. Отнимает количество по каждому материалу, если тот есть в other.
         Если полученное количество отрицательное - игнорирует его.
         Возвращает словарь.
+        zsd_oos - lx_02
+        :param other: объект Subtotal
+        :return: словарь. ключ: материал, значение: разница по количеству
         """
         sub_output = {}
         for key, val in self.output.items():
