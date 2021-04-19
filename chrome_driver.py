@@ -3,12 +3,18 @@ from datetime import date, timedelta
 from selenium.webdriver.common.keys import Keys
 from time import sleep
 from pathlib import Path
+import glob
+import os
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.common.exceptions import NoSuchFrameException
 
 BASE_PATH = Path(__file__).resolve().parent
+
+def get_last_file_path():
+    last_file = max(glob.glob('C:\\Users\\by059491\\Downloads\\*.xlsx'), key=os.path.getctime)
+    return last_file
 
 
 class GetPage:
@@ -18,12 +24,21 @@ class GetPage:
         self.driver.get(page_url)
         self.driver.switch_to.frame('application-Shell-startGUI')
         self.fill_parameters = {}
+        self.last_file_name = get_last_file_path()
+        print(self.last_file_name)
 
     def fill_start_page(self):
         for id_key, id_val in self.fill_parameters.items():
             element = self.driver.find_element_by_id(id_key)
             element.clear()
             element.send_keys(id_val)
+
+    def export_file(self):
+        while get_last_file_path() == self.last_file_name:
+            sleep(0.5)
+        file_name = get_last_file_path()
+        print(f'{self.__class__.__name__} = {file_name}')
+        return file_name
 
 
 class OutOfStock(GetPage):
@@ -67,6 +82,7 @@ class OutOfStock(GetPage):
         self.driver.find_element_by_id(self.EXPORT_BTN).click()
         self.driver.find_element_by_id(self.SPREADSHEET).find_element_by_tag_name('tr').click()
         self.driver.find_element_by_id(self.CONTINUE_BTN).click()
+        super().export_file()
 
 
 class Lx02(GetPage):
@@ -97,6 +113,7 @@ class Lx02(GetPage):
         sleep(0.7)
         body.send_keys(Keys.SHIFT + Keys.F4)
         self.driver.find_element_by_id(self.CONTINUE_BTN).click()
+        super().export_file()
 
 
 if __name__ == '__main__':
@@ -106,3 +123,4 @@ if __name__ == '__main__':
     lx02 = Lx02('https://cuvl0301.eur.cchbc.com:8204/sap/bc/ui2/flp#Shell-startGUI?sap-ui2-tcode=LX02&sap-system=LOCAL')
     lx02.fill_start_page()
     lx02.export_file()
+
