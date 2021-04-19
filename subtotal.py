@@ -167,8 +167,11 @@ class Subtotal:
 
 
 if __name__ == '__main__':
-    zsd_path = 'C:\\Users\\by059491\\Downloads\\88409b10-5880-4035-9de3-a3f648ecb849.xlsx'
-    lx02_path = 'C:\\Users\\by059491\\Downloads\\c1499294-564a-4a64-9091-ea178f7c7bd7.xlsx'
+    from chrome_driver import OutOfStock, Lx02
+    zsd_oos = OutOfStock()
+    zsd_path = zsd_oos.get_file()
+    lx_02 = Lx02()
+    lx02_path = lx_02.get_file()
     zsd_array = pyexcel.get_records(file_name=zsd_path)
     lx02_array = pyexcel.get_records(file_name=lx02_path)
 
