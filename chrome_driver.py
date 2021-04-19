@@ -1,17 +1,19 @@
-import pyautogui as gui
 from selenium import webdriver
 from datetime import date, timedelta
 from selenium.webdriver.common.keys import Keys
 from time import sleep
+from pathlib import Path
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.common.exceptions import NoSuchFrameException
 
+BASE_PATH = Path(__file__).resolve().parent
+
 
 class GetPage:
     def __init__(self, page_url):
-        self.driver = webdriver.Chrome('C:\\Users\\by059491\\PycharmProjects\\JuiceCounter\\chromedriver.exe')
+        self.driver = webdriver.Chrome(BASE_PATH / 'chromedriver.exe')
         self.driver.implicitly_wait(10)
         self.driver.get(page_url)
         self.driver.switch_to.frame('application-Shell-startGUI')
