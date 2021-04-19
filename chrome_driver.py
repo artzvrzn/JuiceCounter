@@ -12,12 +12,15 @@ from selenium.common.exceptions import NoSuchFrameException
 
 BASE_PATH = Path(__file__).resolve().parent
 
+
 def get_last_file_path():
     last_file = max(glob.glob('C:\\Users\\by059491\\Downloads\\*.xlsx'), key=os.path.getctime)
     return last_file
 
 
 class GetPage:
+    BASE_URL = 'https://cuvl0301.eur.cchbc.com:8204/'
+
     def __init__(self, page_url):
         self.driver = webdriver.Chrome(BASE_PATH / 'chromedriver.exe')
         self.driver.implicitly_wait(10)
@@ -25,7 +28,7 @@ class GetPage:
         self.driver.switch_to.frame('application-Shell-startGUI')
         self.fill_parameters = {}
         self.last_file_name = get_last_file_path()
-        print(self.last_file_name)
+        self.output_file_name = None
 
     def fill_start_page(self):
         for id_key, id_val in self.fill_parameters.items():
@@ -36,9 +39,13 @@ class GetPage:
     def export_file(self):
         while get_last_file_path() == self.last_file_name:
             sleep(0.5)
-        file_name = get_last_file_path()
-        print(f'{self.__class__.__name__} = {file_name}')
-        return file_name
+        self.output_file_name = get_last_file_path()
+        print(f'{self.__class__.__name__} = {self.output_file_name}')
+
+    def get_file(self):
+        self.fill_start_page()
+        self.export_file()
+        return self.output_file_name
 
 
 class OutOfStock(GetPage):
@@ -52,10 +59,10 @@ class OutOfStock(GetPage):
     EXPORT_BTN = '_MB_EXPORT102-r'
     SPREADSHEET = 'menu_MB_EXPORT102_1_1-r'
     CONTINUE_BTN = 'M1:50::btn[0]'
+    PAGE_URL = GetPage.BASE_URL + 'sap/bc/ui2/flp#Shell-startGUI?sap-ui2-tcode=ZSD_OOS&sap-system=LOCAL'
 
-    def __init__(self, page_url, date_from=None, date_to=None):
-        super().__init__(page_url)
-
+    def __init__(self, date_from=None, date_to=None):
+        super().__init__(self.PAGE_URL)
         self.date_from = date.today() + timedelta(days=1)
         self.date_to = date_to
         self.fill_parameters = {
@@ -93,9 +100,10 @@ class Lx02(GetPage):
     LAYOUT = 'M0:46:::18:34'
     SUBMIT_BTN = 'M0:50::btn[8]'
     CONTINUE_BTN = 'M1:50::btn[0]'
+    PAGE_URL = GetPage.BASE_URL + 'sap/bc/ui2/flp#Shell-startGUI?sap-ui2-tcode=LX02&sap-system=LOCAL'
 
-    def __init__(self, page_url):
-        super().__init__(page_url)
+    def __init__(self):
+        super().__init__(self.PAGE_URL)
         self.fill_parameters = {
             self.WAREHOUSE_NUMBER: '270',
             self.STORAGE_TYPE_FROM: '110',
@@ -117,10 +125,9 @@ class Lx02(GetPage):
 
 
 if __name__ == '__main__':
-    zsd_oos = OutOfStock('https://cuvl0301.eur.cchbc.com:8204/sap/bc/ui2/flp#Shell-startGUI?sap-ui2-tcode=ZSD_OOS&sap-system=LOCAL')
+    zsd_oos = OutOfStock()
     zsd_oos.fill_start_page()
     zsd_oos.export_file()
-    lx02 = Lx02('https://cuvl0301.eur.cchbc.com:8204/sap/bc/ui2/flp#Shell-startGUI?sap-ui2-tcode=LX02&sap-system=LOCAL')
+    lx02 = Lx02()
     lx02.fill_start_page()
     lx02.export_file()
-
