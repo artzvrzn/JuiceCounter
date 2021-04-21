@@ -1,9 +1,10 @@
+import os
 from datetime import datetime
 from dataclasses import dataclass, astuple
 from operator import attrgetter
 from math import ceil
-
 import pyexcel
+from chrome_driver import OutOfStock, Lx02, BASE_PATH
 
 MATERIAL = 'Material'
 DESCRIPTION = 'Material description'
@@ -166,15 +167,13 @@ class Subtotal:
         return f'{self.output}'
 
 
-if __name__ == '__main__':
-    from chrome_driver import OutOfStock, Lx02
+def run_script():
     zsd_oos = OutOfStock()
     zsd_path = zsd_oos.get_file()
     lx_02 = Lx02()
     lx02_path = lx_02.get_file()
     zsd_array = pyexcel.get_records(file_name=zsd_path)
     lx02_array = pyexcel.get_records(file_name=lx02_path)
-
     subtotal_zsd = Subtotal(zsd_array, material='Material', quantity='Cumltv Confd Qty(SU)')
     subtotal_lx02 = Subtotal(lx02_array,
                              material='Material',
@@ -194,3 +193,8 @@ if __name__ == '__main__':
                     print(line, end='')
                 except KeyError:
                     pass
+    os.startfile(BASE_PATH / 'test.txt', 'print')
+
+
+if __name__ == '__main__':
+    run_script()

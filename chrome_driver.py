@@ -5,16 +5,13 @@ from time import sleep
 from pathlib import Path
 import glob
 import os
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as ec
-from selenium.common.exceptions import NoSuchFrameException
+from getpass import getuser
 
 BASE_PATH = Path(__file__).resolve().parent
 
 
 def get_last_file_path():
-    last_file = max(glob.glob('C:\\Users\\by059491\\Downloads\\*.xlsx'), key=os.path.getctime)
+    last_file = max(glob.glob(f'C:\\Users\\{getuser()}\\Downloads\\*.xlsx'), key=os.path.getctime)
     return last_file
 
 
@@ -23,6 +20,7 @@ class GetPage:
 
     def __init__(self, page_url):
         self.driver = webdriver.Chrome(BASE_PATH / 'chromedriver.exe')
+        self.driver.minimize_window()
         self.driver.implicitly_wait(10)
         self.driver.get(page_url)
         self.driver.switch_to.frame('application-Shell-startGUI')
@@ -45,6 +43,7 @@ class GetPage:
     def get_file(self):
         self.fill_start_page()
         self.export_file()
+        self.driver.quit()
         return self.output_file_name
 
 
