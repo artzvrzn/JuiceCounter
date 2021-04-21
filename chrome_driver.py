@@ -1,10 +1,10 @@
+import glob
+import os
 from selenium import webdriver
 from datetime import date, timedelta
 from selenium.webdriver.common.keys import Keys
 from time import sleep
 from pathlib import Path
-import glob
-import os
 from getpass import getuser
 
 BASE_PATH = Path(__file__).resolve().parent

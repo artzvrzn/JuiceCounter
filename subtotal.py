@@ -14,20 +14,22 @@ QUANTITY = 'Available stock'
 DATE = 'SLED/BBD'
 QUARANTINE = 'Storage location'
 
-juice_list = {'819310': ('1.0 BRK X12 DOBRIY APPLE JC GEMINA BY', 48),
-              '819611': ('1.0 BRK X12 DOBRIY MULTIFRUIT NECT G BY', 48),
-              '372112': ('1.0 BRK X12 DOBRIY ORANGE NECT GEMIN BY', 48),
-              '819410': ('1.0 BRK X12 DOBRIY TOMATO JC GEMINA BY', 48),
-              '1533902': ('1.0 BRK X12 DOBRIY BIRCH JC GEMINA BY', 48),
-              '735207': ('1.0 BRK X12 RICH ORANGE JUICE BY', 60),
-              '750009': ('1.0 BRK X12 RICH APPLE JUICE BY', 60),
-              '752008': ('1.0 BRK X12 RICH CHERRY NECT BY', 60),
-              '822603': ('2.0 BRK X6 DOBRIY APPLE JC BYRU', 65),
-              '865503': ('2.0 BRK X6 DOBRIY MULTIFRUIT NECT BYRU', 65),
-              '371503': ('2.0 BRK X6 DOBRIY ORANGE NECT BYRU', 65),
-              '840707': ('2.0 BRK X6 DOBRIY TOMATO SALT JC BYRU', 65),
-              '428921': ('250 NRG X12 COCA COLA BYUA', 120),
-              '14692': ('330 CAN SLEEK X24 COCA-COLA BYRU', 120), }
+pallet_size = {
+    '819310': 48,
+    '819611': 48,
+    '372112': 48,
+    '819410': 48,
+    '1533902': 48,
+    '735207': 60,
+    '750009': 60,
+    '752008': 60,
+    '822603': 65,
+    '865503': 65,
+    '371503': 65,
+    '840707': 65,
+    '428921': 120,
+    '14692': 120,
+}
 
 
 @dataclass
@@ -84,7 +86,6 @@ class BinDeterminate:
                         exist_index = material_list.index(
                             next(x for x in material_list if x.bin_name == bin_data.bin_name))
                         material_list[exist_index].quantity += bin_data.quantity
-                        # if row[MATERIAL] == '819611' and material_list[exist_index].bin_name == 'M15': print(material_list[exist_index].bin_name, material_list[exist_index].bin_date, material_list[exist_index].quantity)
                         if material_list[exist_index].bin_date > bin_data.bin_date:
                             material_list[exist_index].bin_date = bin_data.bin_date
                     except StopIteration:
@@ -182,18 +183,18 @@ def run_script():
 
     bin_determinate = BinDeterminate(lx02_array)
     difference = subtotal_zsd - subtotal_lx02
-    with open('test.txt', 'w') as file:
+    with open('Результат.txt', 'w') as file:
         for mat, mat_value in bin_determinate.get_sorted_array().items():
-            if mat in juice_list:
+            if mat in pallet_size:
                 try:
-                    amount = difference[mat] / juice_list[mat][1]
+                    amount = difference[mat] / pallet_size[mat]
                     line = f'{mat:<8} {mat_value[0].bin_desc:<40} | {mat_value[0].bin_name:<8} | ' \
                            f'{ceil(amount):<2} | {difference[mat]}\n'
                     file.write(line)
                     print(line, end='')
                 except KeyError:
                     pass
-    os.startfile(BASE_PATH / 'test.txt', 'print')
+    os.startfile(BASE_PATH / 'Результат.txt', 'print')
 
 
 if __name__ == '__main__':
