@@ -39,8 +39,8 @@ class BinData:
     bin_date: datetime
     bin_desc: str
 
-    def __str__(self):
-        return f'{self.bin_desc} - {self.quantity} - {self.bin_name} - {self.bin_date.strftime("%d.%m.%Y ")}'
+    # def __str__(self):
+    #     return f'{self.bin_desc} - {self.quantity} - {self.bin_name} - {self.bin_date.strftime("%d.%m.%Y ")}'
 
     def __iter__(self):
         return iter(astuple(self))
@@ -53,7 +53,7 @@ class BinDeterminate:
     дату и описание материала.
     """
 
-    # словарь исключений для эксель файла
+    # словарь исключений для эксель файла 436907
     ignore_dict = {
         MATERIAL: ['10018454',
                    '10018455',
@@ -67,6 +67,7 @@ class BinDeterminate:
         BIN: ['W2', ],
         TYP: ['200', ],
         QUARANTINE: ['1500', ],
+        DATE: ['', ],
     }
 
     def __init__(self, excel_file):
@@ -77,6 +78,7 @@ class BinDeterminate:
         self.output = {}
         for row in self.excel_array:
             bin_data = BinData(bin_name=row[BIN], quantity=row[QUANTITY], bin_date=row[DATE], bin_desc=row[DESCRIPTION])
+            if row[MATERIAL] == '436907': print(bin_data)
             if not any(row[k] in v for k, v in self.ignore_dict.items()):
                 if row[MATERIAL] not in self.output:
                     self.output.setdefault(row[MATERIAL], [bin_data, ])
