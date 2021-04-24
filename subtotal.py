@@ -1,10 +1,11 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from dataclasses import dataclass, astuple
 from operator import attrgetter
 from math import ceil
 import pyexcel
 from chrome_driver import OutOfStock, Lx02, BASE_PATH
+
 
 MATERIAL = 'Material'
 DESCRIPTION = 'Material description'
@@ -39,8 +40,8 @@ class BinData:
     bin_date: datetime
     bin_desc: str
 
-    # def __str__(self):
-    #     return f'{self.bin_desc} - {self.quantity} - {self.bin_name} - {self.bin_date.strftime("%d.%m.%Y ")}'
+    def __str__(self):
+        return f'{self.bin_desc} - {self.quantity} - {self.bin_name} - {self.bin_date.strftime("%d.%m.%Y ")}'
 
     def __iter__(self):
         return iter(astuple(self))
@@ -78,7 +79,6 @@ class BinDeterminate:
         self.output = {}
         for row in self.excel_array:
             bin_data = BinData(bin_name=row[BIN], quantity=row[QUANTITY], bin_date=row[DATE], bin_desc=row[DESCRIPTION])
-            if row[MATERIAL] == '436907': print(bin_data)
             if not any(row[k] in v for k, v in self.ignore_dict.items()):
                 if row[MATERIAL] not in self.output:
                     self.output.setdefault(row[MATERIAL], [bin_data, ])
@@ -170,8 +170,8 @@ class Subtotal:
         return f'{self.output}'
 
 
-def run_script():
-    zsd_oos = OutOfStock()
+def main(date_from=None, date_to=None):
+    zsd_oos = OutOfStock(date_from=date_from, date_to=date_to)
     zsd_path = zsd_oos.get_file()
     lx_02 = Lx02()
     lx02_path = lx_02.get_file()
@@ -200,4 +200,13 @@ def run_script():
 
 
 if __name__ == '__main__':
-    run_script()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--friday', action='store_true')
+    args = parser.parse_args()
+    if args.friday:
+        date_1 = datetime.today() + timedelta(days=1)
+        date_2 = date_1 + timedelta(days=2)
+        main(date_from=date_1.strftime('%d.%m.%Y'), date_to=date_2.strftime('%d.%m.%Y'))
+    else:
+        main()

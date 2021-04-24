@@ -20,7 +20,7 @@ class GetPage:
 
     def __init__(self, page_url):
         self.driver = webdriver.Chrome(BASE_PATH / 'chromedriver.exe')
-        self.driver.minimize_window()
+        # self.driver.minimize_window()
         self.driver.implicitly_wait(10)
         self.driver.get(page_url)
         self.driver.switch_to.frame('application-Shell-startGUI')
