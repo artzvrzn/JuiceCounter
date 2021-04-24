@@ -5,15 +5,29 @@ from operator import attrgetter
 from math import ceil
 import pyexcel
 from chrome_driver import OutOfStock, Lx02, BASE_PATH
+import argparse
 
+parser = argparse.ArgumentParser()
+parser.add_argument('-f', '--friday', action='store_true')
+parser.add_argument('-ru', action='store_true')
+args = parser.parse_args()
 
-MATERIAL = 'Material'
-DESCRIPTION = 'Material description'
-BIN = 'Storage Bin'
-TYP = 'Storage Type'
-QUANTITY = 'Available stock'
-DATE = 'SLED/BBD'
-QUARANTINE = 'Storage location'
+if args.ru:
+    MATERIAL = 'Материал'
+    DESCRIPTION = 'Краткий текст материала'
+    BIN = 'Складское место'
+    TYP = 'Тип склада'
+    QUANTITY = 'Доступный запас'
+    DATE = 'Срок хранения/МСГ'
+    QUARANTINE = 'Склад'
+else:
+    MATERIAL = 'Material'
+    DESCRIPTION = 'Material description'
+    BIN = 'Storage Bin'
+    TYP = 'Storage Type'
+    QUANTITY = 'Available stock'
+    DATE = 'SLED/BBD'
+    QUARANTINE = 'Storage location'
 
 pallet_size = {
     '819310': 48,
@@ -104,11 +118,11 @@ class BinDeterminate:
             value.sort(key=attrgetter('bin_date', 'quantity'))
         return sorted_output
 
-    def get_current_bin_txt(self):
+    def get_current_bin(self):
         """
         Записывает файл output.txt, в котором перечислены все материалы и первое отгружаемое место.
         """
-        with open('output.txt', 'w') as txt:
+        with open('bin list.txt', 'w', encoding='utf8') as txt:
             for key, value in self.get_sorted_array().items():
                 output = f'{key:<10} {value[0].bin_desc:<40} :: {value[0].bin_name:<6} :: ' \
                          f'{value[0].bin_date.strftime("%d.%m.%Y")}\n'
@@ -177,15 +191,23 @@ def main(date_from=None, date_to=None):
     lx02_path = lx_02.get_file()
     zsd_array = pyexcel.get_records(file_name=zsd_path)
     lx02_array = pyexcel.get_records(file_name=lx02_path)
-    subtotal_zsd = Subtotal(zsd_array, material='Material', quantity='Cumltv Confd Qty(SU)')
-    subtotal_lx02 = Subtotal(lx02_array,
-                             material='Material',
-                             quantity='Available stock',
-                             value_to_ignore={'Storage Type': '110'})
+    if args.ru:
+        subtotal_zsd = Subtotal(zsd_array, material='Материал', quantity='КумПодтвКол (ПрЕИ)')
+        subtotal_lx02 = Subtotal(lx02_array,
+                                 material='Материал',
+                                 quantity='Доступный запас',
+                                 value_to_ignore={'Тип склада': '110'})
+    else:
+        subtotal_zsd = Subtotal(zsd_array, material='Material', quantity='Cumltv Confd Qty(SU)')
+        subtotal_lx02 = Subtotal(lx02_array,
+                                 material='Material',
+                                 quantity='Available stock',
+                                 value_to_ignore={'Storage Type': '110'})
 
     bin_determinate = BinDeterminate(lx02_array)
+    # bin_determinate.get_current_bin()
     difference = subtotal_zsd - subtotal_lx02
-    with open('Результат.txt', 'w') as file:
+    with open('Результат.txt', 'w', encoding='utf8') as file:
         for mat, mat_value in bin_determinate.get_sorted_array().items():
             if mat in pallet_size:
                 try:
@@ -200,10 +222,7 @@ def main(date_from=None, date_to=None):
 
 
 if __name__ == '__main__':
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--friday', action='store_true')
-    args = parser.parse_args()
+
     if args.friday:
         date_1 = datetime.today() + timedelta(days=1)
         date_2 = date_1 + timedelta(days=2)
