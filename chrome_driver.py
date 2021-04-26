@@ -6,12 +6,17 @@ from selenium.webdriver.common.keys import Keys
 from time import sleep
 from pathlib import Path
 from getpass import getuser
+from logger import logger
 
 BASE_PATH = Path(__file__).resolve().parent
 
 
 def get_last_file_path():
-    last_file = max(glob.glob(f'C:\\Users\\{getuser()}\\Downloads\\*.xlsx'), key=os.path.getctime)
+    try:
+        last_file = max(glob.glob(f'C:\\Users\\{getuser()}\\Downloads\\*.xlsx'), key=os.path.getctime)
+    except ValueError:
+        last_file = 'No file'
+        logger.debug(last_file)
     return last_file
 
 
@@ -38,7 +43,7 @@ class GetPage:
         while get_last_file_path() == self.last_file_name:
             sleep(0.5)
         self.output_file_name = get_last_file_path()
-        print(f'{self.__class__.__name__} = {self.output_file_name}')
+        logger.info(f'{self.__class__.__name__} = {self.output_file_name}')
 
     def get_file(self):
         self.fill_start_page()

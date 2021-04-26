@@ -1,11 +1,12 @@
 import os
+import argparse
 from datetime import datetime, timedelta
 from dataclasses import dataclass, astuple
 from operator import attrgetter
 from math import ceil
 import pyexcel
 from chrome_driver import OutOfStock, Lx02, BASE_PATH
-import argparse
+from logger import logger
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--friday', action='store_true')
@@ -61,6 +62,58 @@ class BinData:
         return iter(astuple(self))
 
 
+class Subtotal:
+    """
+    Читает эксель файл и подсчитывает общее количество продукции по каждому материалу.
+    Первой строкой в файле должны быть заголовки столбцов.
+    """
+
+    def __init__(self, excel_path, material, quantity, value_to_ignore=None):
+        """
+        :param excel_path: путь к файлу
+        :param material: имя колонки, который содержит коды материалов
+        :param quantity: имя колонки, которая содержит количество, необходимое для подсчета
+        :param value_to_ignore: словарь, ключ - имя колонки, значение - что исключать
+        """
+        self.excel_array = pyexcel.get_records(file_name=excel_path)
+        self.output = {}
+        logger.info(f'initiating {os.path.split(excel_path)[1]} ...')
+        for row in self.excel_array:
+            if value_to_ignore is not None and any(row[x] == y for x, y in value_to_ignore.items()):
+                continue
+            else:
+                if row[material] not in self.output:
+                    self.output.setdefault(row[material], row[quantity])
+                    continue
+                else:
+                    self.output[row[material]] += row[quantity]
+
+    def __getitem__(self, item):
+        return self.output[item]
+
+    def __sub__(self, other):
+        """
+        Метод вычисления. Отнимает количество по каждому материалу, если тот есть в other.
+        Если полученное количество отрицательное - игнорирует его.
+        Возвращает словарь.
+        :param other: объект Subtotal
+        :return: словарь. ключ: материал, значение: разница по количеству
+        """
+        sub_output = {}
+        for key, val in self.output.items():
+            try:
+                new_val = self.output[key]
+                new_val -= other[key]
+                if new_val > 0:
+                    sub_output.setdefault(key, new_val)
+            except KeyError:
+                pass
+        return sub_output
+
+    def __str__(self):
+        return f'{self.output}'
+
+
 class BinDeterminate:
     """
     Читает эксель файл и определяет идущее в отгрузку место для каждого материала.
@@ -68,7 +121,7 @@ class BinDeterminate:
     дату и описание материала.
     """
 
-    # словарь исключений для эксель файла 436907
+    # словарь исключений для эксель файла
     ignore_dict = {
         MATERIAL: ['10018454',
                    '10018455',
@@ -85,12 +138,13 @@ class BinDeterminate:
         DATE: ['', ],
     }
 
-    def __init__(self, excel_file):
+    def __init__(self, excel_file: list):
         """
-        :param excel_file: принимает pyexcel.get_records(путь к файлу)
+        :param excel_file: принимает список pyexcel.get_records
         """
         self.excel_array = excel_file
         self.output = {}
+        logger.info('initiating bin determination...')
         for row in self.excel_array:
             bin_data = BinData(bin_name=row[BIN], quantity=row[QUANTITY], bin_date=row[DATE], bin_desc=row[DESCRIPTION])
             if not any(row[k] in v for k, v in self.ignore_dict.items()):
@@ -124,61 +178,9 @@ class BinDeterminate:
         """
         with open('bin list.txt', 'w', encoding='utf8') as txt:
             for key, value in self.get_sorted_array().items():
-                output = f'{key:<10} {value[0].bin_desc:<40} :: {value[0].bin_name:<6} :: ' \
+                output = f'{key:<10} {value[0].bin_desc:<40} | {value[0].bin_name:<6} | ' \
                          f'{value[0].bin_date.strftime("%d.%m.%Y")}\n'
                 txt.write(output)
-
-    def __str__(self):
-        return f'{self.output}'
-
-
-class Subtotal:
-    """
-    Читает эксель файл и подсчитывает общее количество продукции по каждому материалу.
-    Первой строкой в файле должны быть заголовки столбцов.
-    """
-
-    def __init__(self, excel_file, material, quantity, value_to_ignore=None):
-        """
-        :param excel_file: принимает pyexcel.get_records(путь к файлу)
-        :param material: имя колонки, который содержит коды материалов
-        :param quantity: имя колонки, которая содержит количество, необходимое для подсчета
-        :param value_to_ignore: словарь, ключ - имя колонки, значение - что исключать
-        """
-        self.excel_array = excel_file
-        self.output = {}
-        for row in self.excel_array:
-            if value_to_ignore is not None and any(row[x] == y for x, y in value_to_ignore.items()):
-                continue
-            else:
-                if row[material] not in self.output:
-                    self.output.setdefault(row[material], row[quantity])
-                    continue
-                else:
-                    self.output[row[material]] += row[quantity]
-
-    def __getitem__(self, item):
-        return self.output[item]
-
-    def __sub__(self, other):
-        """
-        Метод вычисления. Отнимает количество по каждому материалу, если тот есть в other.
-        Если полученное количество отрицательное - игнорирует его.
-        Возвращает словарь.
-        zsd_oos - lx_02
-        :param other: объект Subtotal
-        :return: словарь. ключ: материал, значение: разница по количеству
-        """
-        sub_output = {}
-        for key, val in self.output.items():
-            try:
-                new_val = self.output[key]
-                new_val -= other[key]
-                if new_val > 0:
-                    sub_output.setdefault(key, new_val)
-            except KeyError:
-                pass
-        return sub_output
 
     def __str__(self):
         return f'{self.output}'
@@ -189,23 +191,21 @@ def main(date_from=None, date_to=None):
     zsd_path = zsd_oos.get_file()
     lx_02 = Lx02()
     lx02_path = lx_02.get_file()
-    zsd_array = pyexcel.get_records(file_name=zsd_path)
-    lx02_array = pyexcel.get_records(file_name=lx02_path)
     if args.ru:
-        subtotal_zsd = Subtotal(zsd_array, material='Материал', quantity='КумПодтвКол (ПрЕИ)')
-        subtotal_lx02 = Subtotal(lx02_array,
+        subtotal_zsd = Subtotal(zsd_path, material='Материал', quantity='КумПодтвКол (ПрЕИ)')
+        subtotal_lx02 = Subtotal(lx02_path,
                                  material='Материал',
                                  quantity='Доступный запас',
                                  value_to_ignore={'Тип склада': '110'})
     else:
-        subtotal_zsd = Subtotal(zsd_array, material='Material', quantity='Cumltv Confd Qty(SU)')
-        subtotal_lx02 = Subtotal(lx02_array,
+        subtotal_zsd = Subtotal(zsd_path, material='Material', quantity='Cumltv Confd Qty(SU)')
+        subtotal_lx02 = Subtotal(lx02_path,
                                  material='Material',
                                  quantity='Available stock',
                                  value_to_ignore={'Storage Type': '110'})
 
-    bin_determinate = BinDeterminate(lx02_array)
-    # bin_determinate.get_current_bin()
+    bin_determinate = BinDeterminate(subtotal_lx02.excel_array)
+    bin_determinate.get_current_bin()
     difference = subtotal_zsd - subtotal_lx02
     with open('Результат.txt', 'w', encoding='utf8') as file:
         for mat, mat_value in bin_determinate.get_sorted_array().items():
@@ -222,10 +222,11 @@ def main(date_from=None, date_to=None):
 
 
 if __name__ == '__main__':
-
     if args.friday:
         date_1 = datetime.today() + timedelta(days=1)
         date_2 = date_1 + timedelta(days=2)
         main(date_from=date_1.strftime('%d.%m.%Y'), date_to=date_2.strftime('%d.%m.%Y'))
     else:
+        a = datetime.today() + timedelta(days=-1)
         main()
+
