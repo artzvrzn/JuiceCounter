@@ -133,7 +133,7 @@ class BinDeterminate:
                    '10064536',
                    '10077352', ],
         BIN: ['W2', ],
-        TYP: ['200', ],
+        TYP: ['200', '118'],
         QUARANTINE: ['1500', ],
         DATE: ['', ],
     }
@@ -213,7 +213,7 @@ def main(date_from=None, date_to=None):
                 try:
                     amount = difference[mat] / pallet_size[mat]
                     line = f'{mat:<8} {mat_value[0].bin_desc:<40} | {mat_value[0].bin_name:<8} | ' \
-                           f'{ceil(amount):<2} | {difference[mat]}\n'
+                           f'{ceil(amount):<2} | {round(difference[mat])}\n'
                     file.write(line)
                     print(line, end='')
                 except KeyError:
